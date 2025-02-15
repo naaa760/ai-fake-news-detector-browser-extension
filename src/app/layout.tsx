@@ -4,8 +4,9 @@ import { Inter } from "next/font/google";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "AI Fake News Detector",
-  description: "Detect fake news using AI",
+  title: "AI Fake News Detector - Browse with Confidence",
+  description:
+    "Detect fake news and misinformation in real-time while you browse with our AI-powered browser extension.",
 };
 
 export default function RootLayout({
@@ -15,9 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <div className="w-[400px] h-[500px] bg-white">{children}</div>
-      </body>
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }
