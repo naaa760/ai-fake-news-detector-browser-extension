@@ -233,3 +233,479 @@ body {
 .flip-card-inner {
   animation: pulseGlow 3s infinite;
 }
+
+/* Add these new styles before the last closing bracket */
+.advice-section {
+  position: relative;
+  padding: 6rem 0;
+  overflow: hidden;
+}
+
+.advice-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  min-height: 500px;
+}
+
+.advice-content {
+  animation: fadeInLeft 0.8s ease-out forwards;
+}
+
+.advice-content h2 {
+  font-size: 3.5rem;
+  line-height: 1.1;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(
+    to right,
+    hsl(var(--primary)),
+    hsl(var(--chart-1))
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.advice-content p {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 2rem;
+}
+
+.advice-image {
+  position: relative;
+  animation: fadeInRight 0.8s ease-out forwards;
+}
+
+.advice-image img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.advice-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: hsl(var(--secondary));
+  border-radius: 2rem;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+}
+
+.advice-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-radius: var(--radius);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.advice-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Add responsive styles */
+@media (max-width: 768px) {
+  .advice-container {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .advice-content h2 {
+    font-size: 2.5rem;
+  }
+
+  .advice-video {
+    min-height: 300px;
+  }
+}
+
+/* Add these styles in the existing advice section styles */
+.advice-video {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  animation: fadeInRight 0.8s ease-out forwards;
+}
+
+.advice-video video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  background: rgba(26, 20, 16, 0.3);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Add these new styles for enhanced video section */
+.advice-video {
+  position: relative;
+  overflow: hidden;
+}
+
+.advice-video::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+.advice-video::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.advice-video:hover::after {
+  opacity: 1;
+}
+
+.advice-video video {
+  transform: scale(1);
+  transition: transform 0.3s ease;
+}
+
+.advice-video:hover video {
+  transform: scale(1.02);
+}
+
+/* Enhanced advice section styles */
+.advice-section {
+  position: relative;
+  padding: 6rem 0;
+  overflow: hidden;
+}
+
+.advice-section::before {
+  content: "";
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.03) 0%,
+    transparent 50%
+  );
+  animation: rotate 20s linear infinite;
+}
+
+.floating-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  animation: float 6s infinite;
+}
+
+.particle:nth-child(1) {
+  top: 20%;
+  left: 10%;
+  animation-delay: 0s;
+}
+.particle:nth-child(2) {
+  top: 60%;
+  left: 20%;
+  animation-delay: 1s;
+}
+.particle:nth-child(3) {
+  top: 40%;
+  left: 80%;
+  animation-delay: 2s;
+}
+.particle:nth-child(4) {
+  top: 10%;
+  left: 60%;
+  animation-delay: 3s;
+}
+.particle:nth-child(5) {
+  top: 80%;
+  left: 90%;
+  animation-delay: 4s;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) translateX(0);
+  }
+  50% {
+    transform: translateY(-20px) translateX(10px);
+  }
+}
+
+/* Enhanced button styles */
+.advice-button {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(45deg, hsl(var(--primary)), hsl(var(--chart-1)));
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.advice-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.advice-button:hover::before {
+  left: 100%;
+}
+
+/* Glowing text effect */
+.glow-text {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5),
+    0 0 20px rgba(255, 255, 255, 0.3), 0 0 30px rgba(255, 255, 255, 0.2);
+  animation: textPulse 3s infinite;
+}
+
+@keyframes textPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Enhanced particle effects */
+.particle {
+  position: absolute;
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.05)
+  );
+  border-radius: 50%;
+  filter: blur(1px);
+  animation: float 6s infinite, glow 4s infinite;
+}
+
+.particle:nth-child(1) {
+  width: 6px;
+  height: 6px;
+}
+.particle:nth-child(2) {
+  width: 8px;
+  height: 8px;
+}
+.particle:nth-child(3) {
+  width: 4px;
+  height: 4px;
+}
+.particle:nth-child(4) {
+  width: 10px;
+  height: 10px;
+}
+.particle:nth-child(5) {
+  width: 5px;
+  height: 5px;
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    filter: blur(1px) brightness(1);
+  }
+  50% {
+    filter: blur(2px) brightness(1.5);
+  }
+}
+
+/* Animated gradient border */
+.gradient-border {
+  position: relative;
+  border-radius: var(--radius);
+  background: linear-gradient(
+    45deg,
+    hsl(var(--primary)),
+    hsl(var(--chart-1)),
+    hsl(var(--chart-2)),
+    hsl(var(--chart-3))
+  );
+  padding: 2px;
+  animation: borderRotate 4s linear infinite;
+}
+
+.gradient-border-inner {
+  background: hsl(var(--background));
+  border-radius: calc(var(--radius) - 2px);
+  padding: 1rem;
+}
+
+@keyframes borderRotate {
+  from {
+    filter: hue-rotate(0deg);
+  }
+  to {
+    filter: hue-rotate(360deg);
+  }
+}
+
+/* Enhanced video container */
+.advice-video {
+  position: relative;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.advice-video video {
+  transform: translateZ(0);
+  transition: transform 0.5s ease;
+}
+
+.advice-video:hover video {
+  transform: translateZ(20px) scale(1.05);
+}
+
+/* Glowing corners */
+.glow-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.3),
+    transparent 70%
+  );
+  animation: cornerPulse 2s infinite;
+}
+
+.glow-corner-tl {
+  top: 0;
+  left: 0;
+}
+.glow-corner-tr {
+  top: 0;
+  right: 0;
+}
+.glow-corner-bl {
+  bottom: 0;
+  left: 0;
+}
+.glow-corner-br {
+  bottom: 0;
+  right: 0;
+}
+
+@keyframes cornerPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.8;
+  }
+}
+
+/* Enhanced button hover effect */
+.advice-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+  background-size: 200% 100%;
+  background-position: 100% 0;
+}
+
+.advice-button:hover {
+  background-position: 0 0;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+/* Floating animation for content */
+.float-animation {
+  animation: contentFloat 6s ease-in-out infinite;
+}
+
+@keyframes contentFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}

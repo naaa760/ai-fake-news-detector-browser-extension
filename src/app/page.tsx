@@ -298,6 +298,74 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        <section className="advice-section">
+          <div className="floating-particles">
+            <div className="particle"></div>
+            <div className="particle"></div>
+            <div className="particle"></div>
+            <div className="particle"></div>
+            <div className="particle"></div>
+          </div>
+
+          <div className="advice-container">
+            <div className="advice-content">
+              <div className="advice-badge group transition-all duration-300 hover:scale-105">
+                <span className="flex items-center gap-2">
+                  <span className="inline-block animate-pulse">💡</span>
+                  <span className="relative">
+                    ADVICE
+                    <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-white/20 transition-all duration-300 group-hover:w-full"></span>
+                  </span>
+                </span>
+              </div>
+
+              <h2 className="relative">
+                Get guidance from the experts
+                <span className="absolute -right-4 -top-4 h-8 w-8 animate-ping rounded-full bg-white/5"></span>
+              </h2>
+
+              <p className="relative z-10 backdrop-blur-sm">
+                Level-up your money management with real-time insights from AI
+                plus expert human guidance on topics ranging from investing to
+                retirement.
+              </p>
+
+              <button className="advice-button group">
+                <span className="relative z-10 flex items-center gap-2">
+                  LEARN MORE ABOUT ADVICE
+                  <svg
+                    className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    />
+                  </svg>
+                </span>
+              </button>
+            </div>
+
+            <div className="advice-video">
+              <video
+                className="rounded-lg shadow-xl"
+                playsInline
+                muted
+                autoPlay
+                loop
+                src="/vid.mp4"
+              >
+                Your browser does not support the video tag.
+              </video>
+              <div className="absolute inset-0 rounded-lg bg-gradient-to-tr from-black/20 to-transparent pointer-events-none"></div>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="container mx-auto px-4 py-8">
