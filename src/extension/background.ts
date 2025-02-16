@@ -1,10 +1,16 @@
 import { FakeNewsDetector } from "../core/ai/model";
-import { FactChecker } from "../core/api/factcheck";
+import { FactChecker, FactCheck } from "../core/api/factcheck";
+import { ArticleAnalysis } from "@/types/extension";
+
+interface AnalysisResult extends ArticleAnalysis {
+  factChecks: FactCheck[];
+  timestamp: number;
+}
 
 class BackgroundService {
   private detector: FakeNewsDetector;
   private factChecker: FactChecker;
-  private cache: Map<string, any>;
+  private cache: Map<string, AnalysisResult>;
 
   constructor() {
     this.detector = new FakeNewsDetector();
