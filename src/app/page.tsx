@@ -1,22 +1,76 @@
+"use client";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import {
-  Shield,
-  Zap,
-  Brain,
-  Share2,
-  CheckCircle,
-  Chrome,
-  AlertTriangle,
-} from "lucide-react";
+
+import { Shield, CheckCircle, Chrome, AlertTriangle } from "lucide-react";
 import Image from "next/image";
 import img3 from "../../public/img3.png";
 import { MotionDiv, MotionH1 } from "@/components/motion";
 import { FlowingBackground } from "@/components/ui/flowing-background";
+import { useEffect, useState } from "react";
 
 export default function LandingPage() {
+  const [isExtensionInstalled, setIsExtensionInstalled] = useState(false);
+
+  useEffect(() => {
+    // Check if extension is already installed
+    if (
+      typeof window !== "undefined" &&
+      "chrome" in window &&
+      window.chrome?.runtime?.sendMessage
+    ) {
+      const EXTENSION_ID = "your-extension-id"; // Replace with your actual extension ID
+      window.chrome.runtime.sendMessage(
+        EXTENSION_ID,
+        { message: "checkInstallation" },
+        function (response: unknown) {
+          setIsExtensionInstalled(!!response);
+        }
+      );
+    }
+  }, []);
+
+  const handleInstallExtension = async () => {
+    if (typeof window !== "undefined") {
+      const isChrome = /Chrome/.test(navigator.userAgent);
+
+      if (!isChrome) {
+        alert("This extension is only available for Google Chrome browser.");
+        return;
+      }
+
+      try {
+        const response = await fetch("/extension.zip");
+        if (!response.ok) throw new Error("Download failed");
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const downloadLink = document.createElement("a");
+        downloadLink.href = url;
+        downloadLink.download = "truthguard-ai-extension.zip";
+
+        const instructions =
+          "To install the TruthGuard AI Extension:\n\n" +
+          "1. Unzip the downloaded file\n" +
+          "2. Open Chrome and go to chrome://extensions\n" +
+          "3. Enable 'Developer mode' (toggle in top-right)\n" +
+          "4. Click 'Load unpacked' button\n" +
+          "5. Select the unzipped extension folder\n\n" +
+          "Click OK to download the extension package.";
+
+        if (confirm(instructions)) {
+          downloadLink.click();
+          window.URL.revokeObjectURL(url);
+        }
+      } catch (error) {
+        alert("Failed to download extension. Please try again.");
+        console.error("Download error:", error);
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0D0D0D] bg-gradient-to-b from-[#0D0D0D] via-[#1A1410] to-[#0D0D0D]">
       <FlowingBackground />
@@ -92,10 +146,14 @@ export default function LandingPage() {
                     <Button
                       size="lg"
                       className="relative overflow-hidden bg-white/10 text-white hover:bg-white/20 transition-all duration-300 group"
+                      onClick={handleInstallExtension}
+                      disabled={isExtensionInstalled}
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                       <Chrome className="mr-2 h-5 w-5" />
-                      Add to Chrome
+                      {isExtensionInstalled
+                        ? "Extension Installed"
+                        : "Add to Chrome"}
                     </Button>
                   </MotionDiv>
                   <MotionDiv
@@ -291,9 +349,13 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 className="bg-white/10 text-white hover:bg-white/20"
+                onClick={handleInstallExtension}
+                disabled={isExtensionInstalled}
               >
                 <Chrome className="mr-2 h-5 w-5" />
-                Install TruthGuard AI
+                {isExtensionInstalled
+                  ? "Extension Installed"
+                  : "Install TruthGuard AI"}
               </Button>
             </div>
           </div>
