@@ -8,12 +8,14 @@
     "start": "next start",
     "lint": "next lint",
     "download-models": "tsx scripts/download-models.ts",
-    "build:extension": "npm run download-models && tsx scripts/build-extension.ts",
+    "create-icons": "tsx scripts/create-placeholder-icon.ts",
+    "build:extension": "npm run create-icons && npm run download-models && tsx scripts/build-extension.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:e2e": "playwright test",
-    "test:e2e:debug": "playwright test --debug"
+    "test:e2e:debug": "playwright test --debug",
+    "package": "cd dist/extension && zip -r ../extension.zip *"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.2",
@@ -37,6 +39,7 @@
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^14.2.1",
     "@types/chrome": "^0.0.260",
+    "@types/fs-extra": "^11.0.4",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.17.19",
     "@types/react": "^19",

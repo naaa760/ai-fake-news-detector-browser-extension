@@ -1,5 +1,5 @@
-import fs from "fs/promises";
-import path from "path";
+import { mkdir, writeFile } from "fs/promises";
+import { join } from "path";
 import fetch from "node-fetch";
 
 const MODELS = {
@@ -9,19 +9,16 @@ const MODELS = {
 };
 
 async function downloadModels() {
-  const modelsDir = path.join(process.cwd(), "public/models");
-
   try {
-    await fs.mkdir(modelsDir, { recursive: true });
+    // Create models directory
+    await mkdir("models", { recursive: true });
 
+    // Download actual models
     for (const [name, url] of Object.entries(MODELS)) {
       console.log(`Downloading ${name} model...`);
       const response = await fetch(url);
       const buffer = await response.arrayBuffer();
-      await fs.writeFile(
-        path.join(modelsDir, `${name}.onnx`),
-        Buffer.from(buffer)
-      );
+      await writeFile(join("models", `${name}.onnx`), Buffer.from(buffer));
     }
 
     console.log("Models downloaded successfully!");

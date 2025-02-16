@@ -1,93 +1,68 @@
-import fs from "fs/promises";
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-import { exec } from "child_process";
-import { promisify } from "util";
-import webpack from "webpack";
-
-const execAsync = promisify(exec);
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const sourceDir = path.join(__dirname, "../src/extension");
-const publicDir = path.join(__dirname, "../public");
-const distDir = path.join(__dirname, "../dist/extension");
+import { build } from "esbuild";
+import { copy, ensureDir, pathExists } from "fs-extra";
 
 async function buildExtension() {
   try {
-    // Create directories
-    await fs.mkdir(distDir, { recursive: true });
-    await fs.mkdir(publicDir, { recursive: true });
+    // Ensure directories exist
+    await ensureDir("dist/extension");
+    await ensureDir("dist/extension/models");
+    await ensureDir("dist/extension/icons");
 
-    // Files to copy
-    const filesToCopy = [
-      "manifest.json",
-      "popup.html",
-      "popup.css",
-      "content.css",
-      "background.ts",
-      "content.ts",
-      "popup.tsx",
-      "workers/ai.worker.ts",
-    ];
+    // Build content script
+    await build({
+      entryPoints: ["src/extension/content.ts"],
+      bundle: true,
+      outfile: "dist/extension/content.js",
+      platform: "browser",
+      minify: true,
+    });
 
-    // Build worker
-    await buildWorker();
+    // Build background script
+    await build({
+      entryPoints: ["src/extension/background.ts"],
+      bundle: true,
+      outfile: "dist/extension/background.js",
+      platform: "browser",
+      minify: true,
+    });
 
-    // Copy files
-    for (const file of filesToCopy) {
-      const sourcePath = path.join(sourceDir, file);
-      const destPath = path.join(distDir, file);
+    // Build popup
+    await build({
+      entryPoints: ["src/extension/popup/index.tsx"],
+      bundle: true,
+      outfile: "dist/extension/popup.js",
+      platform: "browser",
+      minify: true,
+    });
 
-      try {
-        await fs.access(sourcePath);
-        await fs.copyFile(sourcePath, destPath);
-        console.log(`Copied ${file}`);
-      } catch {
-        console.warn(`Warning: ${file} not found in source directory`);
+    // Copy static files
+    await copy("src/extension/manifest.json", "dist/extension/manifest.json");
+    await copy("src/extension/popup.html", "dist/extension/popup.html");
+    await copy("src/extension/content.css", "dist/extension/content.css");
+    await copy("src/extension/popup.css", "dist/extension/popup.css");
+    await copy("models", "dist/extension/models");
+
+    // Copy icons if they exist, create placeholders if not
+    if (await pathExists("icons")) {
+      await copy("icons", "dist/extension/icons");
+    } else {
+      console.log("Creating placeholder icons...");
+      await ensureDir("icons");
+      // Create empty icon files
+      for (const size of [16, 48, 128]) {
+        await copy(
+          "src/extension/placeholder-icon.png",
+          `icons/icon${size}.png`
+        );
       }
+      await copy("icons", "dist/extension/icons");
     }
 
-    // Create zip file
-    const zipPath = path.join(publicDir, "extension.zip");
-    try {
-      await execAsync(`cd "${distDir}" && zip -r "${zipPath}" ./*`);
-      console.log("Extension package created successfully!");
-    } catch (error) {
-      console.error("Error creating zip:", error);
-      throw error;
-    }
+    console.log("Extension built successfully!");
   } catch (error) {
     console.error("Build failed:", error);
     process.exit(1);
   }
 }
 
-async function buildWorker() {
-  const compiler = webpack({
-    entry: "./src/extension/workers/ai.worker.ts",
-    output: {
-      filename: "ai.worker.js",
-      path: path.resolve(__dirname, "../dist/extension/workers"),
-    },
-    module: {
-      rules: [
-        {
-          test: /\.ts$/,
-          use: "ts-loader",
-          exclude: /node_modules/,
-        },
-      ],
-    },
-  });
-
-  return new Promise((resolve, reject) => {
-    compiler.run((err, stats) => {
-      if (err) reject(err);
-      else resolve(stats);
-    });
-  });
-}
-
-buildExtension().catch(console.error);
+buildExtension();

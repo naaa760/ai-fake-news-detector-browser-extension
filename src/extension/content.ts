@@ -4,6 +4,7 @@ import { ArticleAnalysis } from "@/types/extension";
 class ContentAnalyzer {
   private detector: FakeNewsDetector;
   private analyzing = false;
+  private badge: HTMLElement | null = null;
 
   constructor() {
     this.detector = new FakeNewsDetector();
@@ -11,16 +12,25 @@ class ContentAnalyzer {
   }
 
   private async initialize() {
+    this.createLoadingBadge();
     await this.detector.initialize();
     this.setupMessageListener();
-    this.analyzeCurrentPage();
+    await this.analyzeCurrentPage();
+  }
+
+  private createLoadingBadge() {
+    this.badge = document.createElement("div");
+    this.badge.id = "truthguard-badge";
+    this.badge.className = "truthguard-badge";
+    this.badge.textContent = "Analyzing...";
+    document.body.appendChild(this.badge);
   }
 
   private setupMessageListener() {
     chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
       if (request.type === "GET_ANALYSIS") {
         this.analyzeCurrentPage().then(sendResponse);
-        return true; // Keep channel open for async response
+        return true;
       }
     });
   }
@@ -28,6 +38,7 @@ class ContentAnalyzer {
   private async analyzeCurrentPage(): Promise<ArticleAnalysis | null> {
     if (this.analyzing) return null;
     this.analyzing = true;
+    this.updateBadgeState("analyzing");
 
     try {
       const content = this.getPageContent();
@@ -36,6 +47,7 @@ class ContentAnalyzer {
       return analysis;
     } catch (error) {
       console.error("Analysis failed:", error);
+      this.updateBadgeState("error");
       return null;
     } finally {
       this.analyzing = false;
@@ -52,22 +64,32 @@ class ContentAnalyzer {
     return document.body.textContent || "";
   }
 
-  private updateUI(analysis: ArticleAnalysis) {
-    const badge = this.createOrUpdateBadge();
-    badge.style.backgroundColor = this.getScoreColor(analysis.trustScore.score);
-    badge.textContent = `${Math.round(analysis.trustScore.score * 100)}%`;
+  private updateBadgeState(state: "analyzing" | "error" | "ready") {
+    if (!this.badge) return;
+
+    switch (state) {
+      case "analyzing":
+        this.badge.textContent = "Analyzing...";
+        this.badge.style.backgroundColor = "#FFC107";
+        break;
+      case "error":
+        this.badge.textContent = "Error";
+        this.badge.style.backgroundColor = "#F44336";
+        break;
+      case "ready":
+        // Will be updated with actual score
+        break;
+    }
   }
 
-  private createOrUpdateBadge(): HTMLElement {
-    let badge = document.getElementById("truthguard-badge");
-    if (!badge) {
-      badge = document.createElement("div");
-      badge.id = "truthguard-badge";
-      badge.className =
-        "fixed bottom-4 right-4 p-2 rounded-full text-white font-bold";
-      document.body.appendChild(badge);
-    }
-    return badge;
+  private updateUI(analysis: ArticleAnalysis) {
+    if (!this.badge) return;
+
+    const score = Math.round(analysis.trustScore.score * 100);
+    this.badge.style.backgroundColor = this.getScoreColor(
+      analysis.trustScore.score
+    );
+    this.badge.textContent = `${score}%`;
   }
 
   private getScoreColor(score: number): string {
