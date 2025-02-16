@@ -1,8 +1,11 @@
-import fs from "fs";
+import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { exec } from "child_process";
+import { promisify } from "util";
 
+const execAsync = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -12,15 +15,11 @@ const distDir = path.join(__dirname, "../dist/extension");
 
 async function buildExtension() {
   try {
-    // Create directories if they don't exist
-    if (!fs.existsSync(distDir)) {
-      fs.mkdirSync(distDir, { recursive: true });
-    }
-    if (!fs.existsSync(publicDir)) {
-      fs.mkdirSync(publicDir, { recursive: true });
-    }
+    // Create directories
+    await fs.mkdir(distDir, { recursive: true });
+    await fs.mkdir(publicDir, { recursive: true });
 
-    // Copy static files
+    // Files to copy
     const filesToCopy = [
       "manifest.json",
       "popup.html",
@@ -31,40 +30,33 @@ async function buildExtension() {
       "popup.tsx",
     ];
 
+    // Copy files
     for (const file of filesToCopy) {
       const sourcePath = path.join(sourceDir, file);
       const destPath = path.join(distDir, file);
 
-      if (fs.existsSync(sourcePath)) {
-        fs.copyFileSync(sourcePath, destPath);
+      try {
+        await fs.access(sourcePath);
+        await fs.copyFile(sourcePath, destPath);
         console.log(`Copied ${file}`);
-      } else {
+      } catch (err) {
         console.warn(`Warning: ${file} not found in source directory`);
       }
     }
 
-    // Create a zip file
-    const zipCommand = `cd ${distDir} && zip -r ${path.join(
-      publicDir,
-      "extension.zip"
-    )} ./*`;
-    const { exec } = await import("child_process");
-
-    exec(zipCommand, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error creating zip: ${error}`);
-        return;
-      }
-      if (stderr) {
-        console.error(`Zip stderr: ${stderr}`);
-        return;
-      }
+    // Create zip file
+    const zipPath = path.join(publicDir, "extension.zip");
+    try {
+      await execAsync(`cd "${distDir}" && zip -r "${zipPath}" ./*`);
       console.log("Extension package created successfully!");
-    });
+    } catch (error) {
+      console.error("Error creating zip:", error);
+      throw error;
+    }
   } catch (error) {
     console.error("Build failed:", error);
     process.exit(1);
   }
 }
 
-buildExtension();
+buildExtension().catch(console.error);

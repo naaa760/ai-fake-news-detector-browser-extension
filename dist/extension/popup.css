@@ -1,0 +1,60 @@
+.popup {
+  width: 320px;
+  padding: 16px;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+header {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: #1a1a1a;
+}
+
+.score {
+  font-size: 24px;
+  font-weight: bold;
+  color: #4caf50;
+}
+
+.fact-checks {
+  margin-bottom: 16px;
+}
+
+.fact-check {
+  padding: 12px;
+  margin-bottom: 8px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.source {
+  font-weight: 500;
+  color: #666;
+}
+
+.verdict {
+  margin: 4px 0;
+  font-size: 16px;
+}
+
+.warnings {
+  color: #f44336;
+}
+
+.loading {
+  padding: 24px;
+  text-align: center;
+  color: #666;
+}
+
+.error {
+  padding: 24px;
+  text-align: center;
+  color: #f44336;
+}
