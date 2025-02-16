@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .popup {
   width: 320px;
   padding: 16px;
@@ -57,4 +61,14 @@ h1 {
   padding: 24px;
   text-align: center;
   color: #f44336;
+}
+
+.truthguard-badge {
+  z-index: 9999;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.truthguard-badge:hover {
+  transform: scale(1.1);
 }

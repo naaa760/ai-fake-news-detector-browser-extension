@@ -2,15 +2,19 @@
   "manifest_version": 3,
   "name": "TruthGuard AI",
   "version": "1.0.0",
-  "description": "AI-Powered Fake News Detection",
-  "permissions": [
-    "activeTab",
-    "storage",
-    "scripting",
-    "webNavigation",
-    "alarms"
-  ],
+  "description": "AI-powered fake news detection",
+  "permissions": ["activeTab", "storage"],
   "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"]
+    }
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -23,17 +27,6 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "css": ["content.css"]
-    }
-  ],
-  "background": {
-    "service_worker": "background.js",
-    "type": "module"
   },
   "web_accessible_resources": [
     {

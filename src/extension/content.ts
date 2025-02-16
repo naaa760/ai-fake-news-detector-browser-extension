@@ -1,61 +1,48 @@
 import { FakeNewsDetector } from "../core/ai/model";
-import { FactChecker } from "../core/api/factcheck";
 import { ArticleAnalysis } from "@/types/extension";
-import type { FactCheck } from "../core/api/factcheck";
 
 class ContentAnalyzer {
   private detector: FakeNewsDetector;
-  private factChecker: FactChecker;
   private analyzing = false;
 
   constructor() {
     this.detector = new FakeNewsDetector();
-    this.factChecker = new FactChecker();
-    this.initializeAnalyzer();
+    this.initialize();
   }
 
-  private async initializeAnalyzer() {
+  private async initialize() {
     await this.detector.initialize();
+    this.setupMessageListener();
     this.analyzeCurrentPage();
-    this.observePageChanges();
   }
 
-  private observePageChanges() {
-    const observer = new MutationObserver(() => {
-      if (!this.analyzing) {
-        this.analyzeCurrentPage();
+  private setupMessageListener() {
+    chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
+      if (request.type === "GET_ANALYSIS") {
+        this.analyzeCurrentPage().then(sendResponse);
+        return true; // Keep channel open for async response
       }
     });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
   }
 
-  private async analyzeCurrentPage() {
+  private async analyzeCurrentPage(): Promise<ArticleAnalysis | null> {
+    if (this.analyzing) return null;
     this.analyzing = true;
+
     try {
-      const content = this.extractPageContent();
-      if (!content) return;
-
-      const [aiAnalysis, factChecks] = await Promise.all([
-        this.detector.analyzeContent(content),
-        this.factChecker.checkClaim(content),
-      ]);
-
-      this.updateUI({
-        ...aiAnalysis,
-        factChecks,
-      });
+      const content = this.getPageContent();
+      const analysis = await this.detector.analyzeContent(content);
+      this.updateUI(analysis);
+      return analysis;
     } catch (error) {
       console.error("Analysis failed:", error);
+      return null;
     } finally {
       this.analyzing = false;
     }
   }
 
-  private extractPageContent(): string {
+  private getPageContent(): string {
     const article = document.querySelector("article");
     if (article) return article.textContent || "";
 
@@ -65,32 +52,27 @@ class ContentAnalyzer {
     return document.body.textContent || "";
   }
 
-  private updateUI(analysis: ArticleAnalysis & { factChecks: FactCheck[] }) {
-    const badge = this.getOrCreateBadge();
-    const score = Math.round(analysis.trustScore.score * 100);
-
-    badge.innerHTML = `
-      <div class="truthguard-score" style="color: ${this.getScoreColor(score)}">
-        ${score}%
-      </div>
-      <div class="truthguard-label">Credibility Score</div>
-    `;
+  private updateUI(analysis: ArticleAnalysis) {
+    const badge = this.createOrUpdateBadge();
+    badge.style.backgroundColor = this.getScoreColor(analysis.trustScore.score);
+    badge.textContent = `${Math.round(analysis.trustScore.score * 100)}%`;
   }
 
-  private getOrCreateBadge(): HTMLElement {
+  private createOrUpdateBadge(): HTMLElement {
     let badge = document.getElementById("truthguard-badge");
     if (!badge) {
       badge = document.createElement("div");
       badge.id = "truthguard-badge";
-      badge.className = "truthguard-badge";
+      badge.className =
+        "fixed bottom-4 right-4 p-2 rounded-full text-white font-bold";
       document.body.appendChild(badge);
     }
     return badge;
   }
 
   private getScoreColor(score: number): string {
-    if (score >= 80) return "#4CAF50";
-    if (score >= 60) return "#FFC107";
+    if (score >= 0.8) return "#4CAF50";
+    if (score >= 0.6) return "#FFC107";
     return "#F44336";
   }
 }

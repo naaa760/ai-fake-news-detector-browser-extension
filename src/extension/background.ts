@@ -1,21 +1,16 @@
 import { FakeNewsDetector } from "../core/ai/model";
-import { FactChecker, FactCheck } from "../core/api/factcheck";
 import { ArticleAnalysis } from "@/types/extension";
-
-interface AnalysisResult extends ArticleAnalysis {
-  factChecks: FactCheck[];
-  timestamp: number;
-}
+import { PerformanceService } from "../core/performance";
 
 class BackgroundService {
   private detector: FakeNewsDetector;
-  private factChecker: FactChecker;
-  private cache: Map<string, AnalysisResult>;
+  private cache: Map<string, ArticleAnalysis>;
+  private performance: PerformanceService;
 
   constructor() {
     this.detector = new FakeNewsDetector();
-    this.factChecker = new FactChecker();
     this.cache = new Map();
+    this.performance = PerformanceService.getInstance();
     this.initialize();
   }
 
@@ -26,9 +21,11 @@ class BackgroundService {
 
   private setupMessageListeners() {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      if (request.type === "ANALYZE_CONTENT") {
-        this.handleAnalysis(request.data, sender.tab?.url).then(sendResponse);
-        return true; // Keep channel open for async response
+      if (request.type === "ANALYZE_PAGE") {
+        this.handleAnalysis(request.content, sender.tab?.url).then(
+          sendResponse
+        );
+        return true;
       }
     });
   }
@@ -36,25 +33,17 @@ class BackgroundService {
   private async handleAnalysis(content: string, url?: string) {
     if (!url) return null;
 
-    // Check cache
+    // Check cache first
     if (this.cache.has(url)) {
       return this.cache.get(url);
     }
 
+    const startTime = performance.now();
     try {
-      const [aiAnalysis, factChecks] = await Promise.all([
-        this.detector.analyzeContent(content),
-        this.factChecker.checkClaim(content),
-      ]);
-
-      const result = {
-        ...aiAnalysis,
-        factChecks,
-        timestamp: Date.now(),
-      };
-
-      this.cache.set(url, result);
-      return result;
+      const analysis = await this.detector.analyzeContent(content);
+      this.performance.trackModelPerformance(startTime);
+      this.cache.set(url, analysis);
+      return analysis;
     } catch (error) {
       console.error("Analysis failed:", error);
       return null;
