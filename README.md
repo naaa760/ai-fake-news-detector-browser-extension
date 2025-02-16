@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TruthGuard AI - Fake News Detection Extension
+
+A browser extension that uses AI to detect fake news and verify claims in real-time.
+
+## Features
+
+- Real-time content analysis using ONNX models
+- Integration with fact-checking APIs (Snopes, Reuters)
+- Visual trust score indicator
+- Detailed fact-check reports
+- Performance monitoring
+- Privacy-focused design
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+# Install dependencies
+npm install
+
+# Download AI models
+npm run download-models
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Build extension
+npm run build:extension
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Testing
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Run unit tests
+npm test
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Run E2E tests
+npm run test:e2e
 
-## Learn More
+# Run tests with coverage
+npm run test:coverage
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Development
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The extension is built with:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Next.js for the popup UI
+- ONNX Runtime for AI inference
+- TypeScript for type safety
+- Tailwind CSS for styling
+- Jest and Playwright for testing
 
-## Deploy on Vercel
+## Security
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- API keys are encrypted in storage
+- Content is sanitized before processing
+- Rate limiting on API calls
+- XSS prevention measures
+- Regular security audits
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Run tests and ensure CI passes
+4. Submit a pull request
+
+## License
+
+MIT License - See LICENSE file for details
