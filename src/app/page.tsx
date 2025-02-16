@@ -173,60 +173,63 @@ export default function LandingPage() {
           >
             Powerful Features
           </MotionH1>
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-8 md:grid-cols-2">
             <MotionDiv
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              whileHover={{ scale: 1.02 }}
+              className="flip-card"
             >
-              <Card className="border border-white/20 bg-[#1A1410]/30 p-6 backdrop-blur-sm">
-                <Zap className="mb-4 h-12 w-12 text-white" />
-                <h3 className="mb-2 text-xl font-bold text-white">
-                  Real-Time Analysis
-                </h3>
-                <p className="text-white/80">
-                  Instant verification of news articles as you browse, providing
-                  immediate insights into content credibility.
-                </p>
-              </Card>
+              <div className="flip-card-inner">
+                <div className="flip-card-front">
+                  <Image
+                    src="/img.png"
+                    alt="AI Detection Feature"
+                    width={500}
+                    height={300}
+                    className="rounded-lg object-cover w-full h-full"
+                  />
+                </div>
+                <div className="flip-card-back">
+                  <h3 className="text-2xl font-bold mb-4">
+                    Real-Time Analysis
+                  </h3>
+                  <p className="text-white/90">
+                    Instant verification of news articles as you browse,
+                    providing immediate insights into content credibility.
+                  </p>
+                </div>
+              </div>
             </MotionDiv>
+
             <MotionDiv
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.4 }}
-              whileHover={{ scale: 1.02 }}
+              className="flip-card"
             >
-              <Card className="border border-white/20 bg-[#1A1410]/30 p-6 backdrop-blur-sm">
-                <Brain className="mb-4 h-12 w-12 text-white" />
-                <h3 className="mb-2 text-xl font-bold text-white">
-                  AI-Powered Detection
-                </h3>
-                <p className="text-white/80">
-                  Advanced machine learning algorithms trained on millions of
-                  articles to identify fake news patterns.
-                </p>
-              </Card>
-            </MotionDiv>
-            <MotionDiv
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-              whileHover={{ scale: 1.02 }}
-            >
-              <Card className="border border-white/20 bg-[#1A1410]/30 p-6 backdrop-blur-sm">
-                <Share2 className="mb-4 h-12 w-12 text-white" />
-                <h3 className="mb-2 text-xl font-bold text-white">
-                  Easy Sharing
-                </h3>
-                <p className="text-white/80">
-                  Share verified information with your network and help combat
-                  the spread of misinformation.
-                </p>
-              </Card>
+              <div className="flip-card-inner">
+                <div className="flip-card-front">
+                  <Image
+                    src="/img1.png"
+                    alt="AI Detection Feature"
+                    width={500}
+                    height={300}
+                    className="rounded-lg object-cover w-full h-full"
+                  />
+                </div>
+                <div className="flip-card-back">
+                  <h3 className="text-2xl font-bold mb-4">
+                    AI-Powered Detection
+                  </h3>
+                  <p className="text-white/90">
+                    Advanced machine learning algorithms trained on millions of
+                    articles to identify fake news patterns.
+                  </p>
+                </div>
+              </div>
             </MotionDiv>
           </div>
         </section>
