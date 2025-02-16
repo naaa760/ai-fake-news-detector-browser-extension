@@ -3,7 +3,13 @@
   "name": "TruthGuard AI",
   "version": "1.0.0",
   "description": "AI-Powered Fake News Detection",
-  "permissions": ["activeTab", "storage", "scripting", "webNavigation"],
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "webNavigation",
+    "alarms"
+  ],
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "popup.html",

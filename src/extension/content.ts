@@ -1,122 +1,91 @@
-import { ArticleAnalysis } from "../types/extension";
+import { FakeNewsDetector } from "../core/ai/model";
+import { FactChecker } from "../core/api/factcheck";
+import { ArticleAnalysis } from "@/types/extension";
+import type { FactCheck } from "../core/api/factcheck";
 
 class ContentAnalyzer {
-  private observer: MutationObserver;
-  private analyzing: boolean = false;
+  private detector: FakeNewsDetector;
+  private factChecker: FactChecker;
+  private analyzing = false;
 
   constructor() {
-    this.observer = new MutationObserver(this.handleMutations.bind(this));
+    this.detector = new FakeNewsDetector();
+    this.factChecker = new FactChecker();
     this.initializeAnalyzer();
   }
 
-  private initializeAnalyzer() {
-    // Start observing page changes
-    this.observer.observe(document.body, {
+  private async initializeAnalyzer() {
+    await this.detector.initialize();
+    this.analyzeCurrentPage();
+    this.observePageChanges();
+  }
+
+  private observePageChanges() {
+    const observer = new MutationObserver(() => {
+      if (!this.analyzing) {
+        this.analyzeCurrentPage();
+      }
+    });
+
+    observer.observe(document.body, {
       childList: true,
       subtree: true,
     });
-
-    // Initial analysis
-    this.analyzeContent();
   }
 
-  private async handleMutations(mutations: MutationRecord[]) {
-    if (this.analyzing) return;
-
-    const hasRelevantChanges = mutations.some(
-      (mutation) =>
-        mutation.type === "childList" && this.isRelevantNode(mutation.target)
-    );
-
-    if (hasRelevantChanges) {
-      this.analyzeContent();
-    }
-  }
-
-  private isRelevantNode(node: Node): boolean {
-    if (node instanceof Element) {
-      const relevantTags = ["article", "main", "div", "p"];
-      return relevantTags.includes(node.tagName.toLowerCase());
-    }
-    return false;
-  }
-
-  private async analyzeContent() {
+  private async analyzeCurrentPage() {
     this.analyzing = true;
-    const content = this.extractContent();
+    try {
+      const content = this.extractPageContent();
+      if (!content) return;
 
-    if (content) {
-      try {
-        const analysis = await this.sendForAnalysis(content);
-        this.updateUI(analysis);
-      } catch (error) {
-        console.error("Analysis failed:", error);
-      }
+      const [aiAnalysis, factChecks] = await Promise.all([
+        this.detector.analyzeContent(content),
+        this.factChecker.checkClaim(content),
+      ]);
+
+      this.updateUI({
+        ...aiAnalysis,
+        factChecks,
+      });
+    } catch (error) {
+      console.error("Analysis failed:", error);
+    } finally {
+      this.analyzing = false;
     }
-
-    this.analyzing = false;
   }
 
-  private extractContent(): string {
-    // Prioritize article content
+  private extractPageContent(): string {
     const article = document.querySelector("article");
-    if (article) return this.cleanText(article.textContent || "");
+    if (article) return article.textContent || "";
 
-    // Fall back to main content
-    const main = document.querySelector("main");
-    if (main) return this.cleanText(main.textContent || "");
+    const mainContent = document.querySelector("main");
+    if (mainContent) return mainContent.textContent || "";
 
-    // Last resort: body content
-    return this.cleanText(document.body.textContent || "");
+    return document.body.textContent || "";
   }
 
-  private cleanText(text: string): string {
-    return text
-      .replace(/\s+/g, " ")
-      .replace(/[^\w\s.,!?-]/g, "")
-      .trim();
-  }
-
-  private async sendForAnalysis(content: string): Promise<ArticleAnalysis> {
-    return new Promise((resolve) => {
-      chrome.runtime.sendMessage(
-        { type: "ANALYZE_CONTENT", data: content },
-        (response: ArticleAnalysis) => resolve(response)
-      );
-    });
-  }
-
-  private updateUI(analysis: ArticleAnalysis) {
-    // Create or update the floating badge
+  private updateUI(analysis: ArticleAnalysis & { factChecks: FactCheck[] }) {
     const badge = this.getOrCreateBadge();
-    this.updateBadgeContent(badge, analysis);
+    const score = Math.round(analysis.trustScore.score * 100);
+
+    badge.innerHTML = `
+      <div class="truthguard-score" style="color: ${this.getScoreColor(score)}">
+        ${score}%
+      </div>
+      <div class="truthguard-label">Credibility Score</div>
+    `;
   }
 
   private getOrCreateBadge(): HTMLElement {
     let badge = document.getElementById("truthguard-badge");
-
     if (!badge) {
       badge = document.createElement("div");
       badge.id = "truthguard-badge";
       badge.className = "truthguard-badge";
       document.body.appendChild(badge);
     }
-
     return badge;
-  }
-
-  private updateBadgeContent(badge: HTMLElement, analysis: ArticleAnalysis) {
-    const score = Math.round(analysis.trustScore.score * 100);
-    const color = this.getScoreColor(score);
-
-    badge.innerHTML = `
-      <div class="truthguard-score" style="color: ${color}">
-        ${score}%
-      </div>
-      <div class="truthguard-label">
-        Credibility Score
-      </div>
-    `;
   }
 
   private getScoreColor(score: number): string {

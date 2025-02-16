@@ -39,7 +39,7 @@ async function buildExtension() {
         await fs.access(sourcePath);
         await fs.copyFile(sourcePath, destPath);
         console.log(`Copied ${file}`);
-      } catch (err) {
+      } catch {
         console.warn(`Warning: ${file} not found in source directory`);
       }
     }

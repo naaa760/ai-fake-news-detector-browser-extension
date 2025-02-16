@@ -1,77 +1,60 @@
-import { ArticleAnalysis, TrustScore } from "../types/extension";
+import { FakeNewsDetector } from "../core/ai/model";
+import { FactChecker } from "../core/api/factcheck";
 
-// Cache for storing analysis results
-const analysisCache = new Map<string, ArticleAnalysis>();
+class BackgroundService {
+  private detector: FakeNewsDetector;
+  private factChecker: FactChecker;
+  private cache: Map<string, any>;
 
-// Initialize AI models
-chrome.runtime.onInstalled.addListener(async () => {
-  console.log("TruthGuard AI Extension installed");
-  // Here we would initialize the ONNX models
-  // await initializeModels();
-});
-
-// Listen for messages from content script
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === "ANALYZE_CONTENT") {
-    handleContentAnalysis(request.data, sender.tab?.url).then(sendResponse);
-    return true; // Keep the message channel open for async response
-  }
-});
-
-async function handleContentAnalysis(
-  content: string,
-  url?: string
-): Promise<ArticleAnalysis> {
-  if (!url) return createEmptyAnalysis();
-
-  // Check cache first
-  if (analysisCache.has(url)) {
-    return analysisCache.get(url)!;
+  constructor() {
+    this.detector = new FakeNewsDetector();
+    this.factChecker = new FactChecker();
+    this.cache = new Map();
+    this.initialize();
   }
 
-  // Perform AI analysis
-  const analysis = await analyzeContent(content);
-  analysisCache.set(url, analysis);
-
-  return analysis;
-}
-
-async function analyzeContent(content: string): Promise<ArticleAnalysis> {
-  // Basic content validation
-  if (!content.trim()) {
-    return createEmptyAnalysis();
+  private async initialize() {
+    await this.detector.initialize();
+    this.setupMessageListeners();
   }
 
-  // This would be replaced with actual AI model inference
-  const trustScore: TrustScore = {
-    score: content.length > 100 ? 0.85 : 0.5, // Simple length-based score for now
-    confidence: 0.92,
-    source: "TruthGuard AI",
-    timestamp: Date.now(),
-  };
+  private setupMessageListeners() {
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+      if (request.type === "ANALYZE_CONTENT") {
+        this.handleAnalysis(request.data, sender.tab?.url).then(sendResponse);
+        return true; // Keep channel open for async response
+      }
+    });
+  }
 
-  return {
-    trustScore,
-    factChecks: [
-      {
-        source: "TruthGuard AI",
-        verdict: "Likely True",
-        url: "",
-      },
-    ],
-    warnings: [],
-  };
+  private async handleAnalysis(content: string, url?: string) {
+    if (!url) return null;
+
+    // Check cache
+    if (this.cache.has(url)) {
+      return this.cache.get(url);
+    }
+
+    try {
+      const [aiAnalysis, factChecks] = await Promise.all([
+        this.detector.analyzeContent(content),
+        this.factChecker.checkClaim(content),
+      ]);
+
+      const result = {
+        ...aiAnalysis,
+        factChecks,
+        timestamp: Date.now(),
+      };
+
+      this.cache.set(url, result);
+      return result;
+    } catch (error) {
+      console.error("Analysis failed:", error);
+      return null;
+    }
+  }
 }
 
-function createEmptyAnalysis(): ArticleAnalysis {
-  return {
-    trustScore: {
-      score: 0,
-      confidence: 0,
-      source: "TruthGuard AI",
-      timestamp: Date.now(),
-    },
-    factChecks: [],
-    warnings: ["Unable to analyze content"],
-  };
-}
+// Initialize background service
+new BackgroundService();
