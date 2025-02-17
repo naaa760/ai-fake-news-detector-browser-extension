@@ -1,14 +1,29 @@
 import { build } from "esbuild";
-import { copy, ensureDir, pathExists } from "fs-extra";
+import { copy, ensureDir, remove, pathExists } from "fs-extra";
+import { join } from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 async function buildExtension() {
   try {
-    // Ensure directories exist
-    await ensureDir("dist/extension");
-    await ensureDir("dist/extension/models");
-    await ensureDir("dist/extension/icons");
+    // Clean previous build
+    await remove("dist");
 
-    // Build content script
+    // Ensure all required directories exist
+    await ensureDir("dist/extension");
+    await ensureDir("dist/extension/icons");
+    await ensureDir("dist/extension/models");
+    await ensureDir("models"); // Ensure models directory exists
+
+    // Check if node_modules exists
+    const onnxPath = join(__dirname, "../node_modules/onnxruntime-web");
+    if (!(await pathExists(onnxPath))) {
+      throw new Error("onnxruntime-web not found. Run npm install first.");
+    }
+
+    // Build scripts
     await build({
       entryPoints: ["src/extension/content.ts"],
       bundle: true,
@@ -17,7 +32,6 @@ async function buildExtension() {
       minify: true,
     });
 
-    // Build background script
     await build({
       entryPoints: ["src/extension/background.ts"],
       bundle: true,
@@ -26,7 +40,6 @@ async function buildExtension() {
       minify: true,
     });
 
-    // Build popup
     await build({
       entryPoints: ["src/extension/popup/index.tsx"],
       bundle: true,
@@ -40,22 +53,25 @@ async function buildExtension() {
     await copy("src/extension/popup.html", "dist/extension/popup.html");
     await copy("src/extension/content.css", "dist/extension/content.css");
     await copy("src/extension/popup.css", "dist/extension/popup.css");
-    await copy("models", "dist/extension/models");
+    await copy("icons", "dist/extension/icons");
 
-    // Copy icons if they exist, create placeholders if not
-    if (await pathExists("icons")) {
-      await copy("icons", "dist/extension/icons");
-    } else {
-      console.log("Creating placeholder icons...");
-      await ensureDir("icons");
-      // Create empty icon files
-      for (const size of [16, 48, 128]) {
-        await copy(
-          "src/extension/placeholder-icon.png",
-          `icons/icon${size}.png`
-        );
+    // Copy models if they exist
+    if (await pathExists("models")) {
+      await copy("models", "dist/extension/models");
+    }
+
+    // Copy ONNX Runtime WASM files
+    const wasmFiles = [
+      "ort-wasm.wasm",
+      "ort-wasm-threaded.wasm",
+      "ort-wasm-simd.wasm",
+    ];
+
+    for (const file of wasmFiles) {
+      const sourcePath = join(onnxPath, "dist", file);
+      if (await pathExists(sourcePath)) {
+        await copy(sourcePath, join("dist/extension", file));
       }
-      await copy("icons", "dist/extension/icons");
     }
 
     console.log("Extension built successfully!");

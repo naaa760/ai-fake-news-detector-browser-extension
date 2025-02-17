@@ -20,12 +20,45 @@ class BackgroundService {
   }
 
   private setupMessageListeners() {
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      if (request.type === "ANALYZE_PAGE") {
-        this.handleAnalysis(request.content, sender.tab?.url).then(
-          sendResponse
+    chrome.runtime.onInstalled.addListener(() => {
+      console.log("Extension installed");
+    });
+
+    // Initialize content script when tab is activated
+    chrome.tabs.onActivated.addListener(async (activeInfo) => {
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId: activeInfo.tabId },
+          files: ["content.js"],
+        });
+      } catch (error) {
+        console.error("Failed to inject content script:", error);
+      }
+    });
+
+    // Handle communication between popup and content script
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.type === "GET_ANALYSIS") {
+        chrome.tabs.query(
+          { active: true, currentWindow: true },
+          async (tabs) => {
+            if (!tabs[0]?.id) {
+              sendResponse({ error: "No active tab" });
+              return;
+            }
+
+            try {
+              const response = await chrome.tabs.sendMessage(tabs[0].id, {
+                type: "GET_ANALYSIS",
+              });
+              sendResponse(response);
+            } catch (error) {
+              console.error("Error getting analysis:", error);
+              sendResponse({ error: "Failed to get analysis" });
+            }
+          }
         );
-        return true;
+        return true; // Keep the message channel open
       }
     });
   }

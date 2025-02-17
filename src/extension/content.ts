@@ -1,103 +1,96 @@
-import { FakeNewsDetector } from "../core/ai/model";
+import { FakeNewsDetector } from "@/core/ai/model";
 import { ArticleAnalysis } from "@/types/extension";
 
-class ContentAnalyzer {
+class ContentScript {
   private detector: FakeNewsDetector;
-  private analyzing = false;
-  private badge: HTMLElement | null = null;
+  private badge: HTMLDivElement | null = null;
+  private currentAnalysis: ArticleAnalysis | null = null;
+  private isInitialized = false;
 
   constructor() {
     this.detector = new FakeNewsDetector();
     this.initialize();
-  }
-
-  private async initialize() {
-    this.createLoadingBadge();
-    await this.detector.initialize();
     this.setupMessageListener();
-    await this.analyzeCurrentPage();
-  }
-
-  private createLoadingBadge() {
-    this.badge = document.createElement("div");
-    this.badge.id = "truthguard-badge";
-    this.badge.className = "truthguard-badge";
-    this.badge.textContent = "Analyzing...";
-    document.body.appendChild(this.badge);
   }
 
   private setupMessageListener() {
     chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
       if (request.type === "GET_ANALYSIS") {
-        this.analyzeCurrentPage().then(sendResponse);
-        return true;
+        if (!this.isInitialized) {
+          sendResponse({ error: "Content script not initialized" });
+          return;
+        }
+        sendResponse({ success: true, data: this.currentAnalysis });
       }
+      return true;
     });
   }
 
-  private async analyzeCurrentPage(): Promise<ArticleAnalysis | null> {
-    if (this.analyzing) return null;
-    this.analyzing = true;
-    this.updateBadgeState("analyzing");
-
+  private async initialize() {
     try {
-      const content = this.getPageContent();
-      const analysis = await this.detector.analyzeContent(content);
-      this.updateUI(analysis);
-      return analysis;
+      this.createBadge();
+      this.updateBadgeState("analyzing");
+
+      const initialized = await this.detector.initialize();
+      if (!initialized) {
+        throw new Error("Failed to initialize models");
+      }
+
+      await this.analyzeCurrentPage();
+      this.isInitialized = true;
+      this.updateBadgeState("complete");
     } catch (error) {
-      console.error("Analysis failed:", error);
+      console.error("Initialization failed:", error);
       this.updateBadgeState("error");
-      return null;
-    } finally {
-      this.analyzing = false;
     }
   }
 
-  private getPageContent(): string {
-    const article = document.querySelector("article");
-    if (article) return article.textContent || "";
-
-    const mainContent = document.querySelector("main");
-    if (mainContent) return mainContent.textContent || "";
-
-    return document.body.textContent || "";
+  private createBadge() {
+    this.badge = document.createElement("div");
+    this.badge.className = "truthguard-badge";
+    this.badge.textContent = "Analyzing...";
+    document.body.appendChild(this.badge);
   }
 
-  private updateBadgeState(state: "analyzing" | "error" | "ready") {
+  private async analyzeCurrentPage() {
+    try {
+      const content = document.body.innerText;
+      this.currentAnalysis = await this.detector.analyzeContent(content);
+      this.updateBadgeState("complete");
+    } catch (error) {
+      console.error("Analysis failed:", error);
+      this.updateBadgeState("error");
+    }
+  }
+
+  private updateBadgeState(state: "analyzing" | "complete" | "error") {
     if (!this.badge) return;
 
     switch (state) {
       case "analyzing":
         this.badge.textContent = "Analyzing...";
-        this.badge.style.backgroundColor = "#FFC107";
+        this.badge.style.backgroundColor = "#FFA500";
+        break;
+      case "complete":
+        if (this.currentAnalysis) {
+          const score = Math.round(this.currentAnalysis.trustScore.score * 100);
+          this.badge.textContent = `${score}%`;
+          this.badge.style.backgroundColor = score > 70 ? "#4CAF50" : "#FF5722";
+        }
         break;
       case "error":
         this.badge.textContent = "Error";
         this.badge.style.backgroundColor = "#F44336";
         break;
-      case "ready":
-        // Will be updated with actual score
-        break;
     }
-  }
-
-  private updateUI(analysis: ArticleAnalysis) {
-    if (!this.badge) return;
-
-    const score = Math.round(analysis.trustScore.score * 100);
-    this.badge.style.backgroundColor = this.getScoreColor(
-      analysis.trustScore.score
-    );
-    this.badge.textContent = `${score}%`;
-  }
-
-  private getScoreColor(score: number): string {
-    if (score >= 0.8) return "#4CAF50";
-    if (score >= 0.6) return "#FFC107";
-    return "#F44336";
   }
 }
 
-// Initialize the analyzer
-new ContentAnalyzer();
+// Define interface for window with our content script
+interface ExtendedWindow extends Window {
+  contentScript: ContentScript;
+}
+
+// Create a global instance
+const contentScript = new ContentScript();
+(window as unknown as ExtendedWindow).contentScript = contentScript;

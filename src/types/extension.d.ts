@@ -1,21 +1,22 @@
 export interface ExtensionMessage {
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 export interface TrustScore {
   score: number;
   confidence: number;
-  source: string;
   timestamp: number;
+}
+
+export interface FactCheck {
+  source: string;
+  verdict: string;
+  url: string;
 }
 
 export interface ArticleAnalysis {
   trustScore: TrustScore;
-  factChecks: {
-    source: string;
-    verdict: string;
-    url: string;
-  }[];
+  factChecks: FactCheck[];
   warnings: string[];
 }

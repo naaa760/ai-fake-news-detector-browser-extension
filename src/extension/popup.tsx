@@ -4,22 +4,57 @@ import { ArticleAnalysis } from "../types/extension";
 export function Popup() {
   const [analysis, setAnalysis] = useState<ArticleAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const currentTab = tabs[0];
-      chrome.runtime.sendMessage(
-        { type: "GET_ANALYSIS", tabId: currentTab.id },
-        (response: ArticleAnalysis) => {
-          setAnalysis(response);
+    const getAnalysis = async () => {
+      try {
+        const [tab] = await chrome.tabs.query({
+          active: true,
+          currentWindow: true,
+        });
+
+        if (!tab?.id) {
+          setError("No active tab");
           setLoading(false);
+          return;
         }
-      );
-    });
+
+        // Get analysis
+        chrome.tabs.sendMessage(
+          tab.id,
+          { type: "GET_ANALYSIS" },
+          (response) => {
+            if (chrome.runtime.lastError) {
+              setError("Content script not ready. Please refresh the page.");
+              setLoading(false);
+              return;
+            }
+
+            if (response?.success && response.data) {
+              setAnalysis(response.data);
+              setLoading(false);
+            } else {
+              setError(response?.error || "Analysis not ready. Please wait.");
+              setLoading(false);
+            }
+          }
+        );
+      } catch {
+        setError("Failed to communicate with content script");
+        setLoading(false);
+      }
+    };
+
+    getAnalysis();
   }, []);
 
   if (loading) {
-    return <div className="loading">Analyzing...</div>;
+    return <div className="loading">Analyzing page...</div>;
+  }
+
+  if (error) {
+    return <div className="error">{error}</div>;
   }
 
   if (!analysis) {
